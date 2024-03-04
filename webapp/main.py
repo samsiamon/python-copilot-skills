@@ -1,3 +1,4 @@
+import hashlib
 import os
 import base64
 from typing import Union
@@ -13,8 +14,16 @@ static_path = join(current_dir, "static")
 app = FastAPI()
 app.mount("/ui", StaticFiles(directory=static_path), name="ui")
 
+# Create a Pydantic model
+
+
+class Text(BaseModel):
+
+    text: str
+
 
 class Body(BaseModel):
+
     length: Union[int, None] = 20
 
 
@@ -27,7 +36,8 @@ def root():
 @app.post('/generate')
 def generate(body: Body):
     """
-    Generate a pseudo-random token ID of twenty characters by default. Example POST request body:
+    Generate a pseudo-random token ID of twenty characters by default.
+    Example POST request body:
 
     {
         "length": 20
@@ -35,3 +45,12 @@ def generate(body: Body):
     """
     string = base64.b64encode(os.urandom(64))[:body.length].decode('utf-8')
     return {'token': string}
+
+# Create a FastAPI endpoint that accepts a POST request with a JSON body 
+# containing a single field called "text" and returns a checksum of the text
+
+
+@app.post("/checksum")
+async def calculate_checksum(text: Text):
+    checksum = hashlib.md5(text.text.encode()).hexdigest()
+    return {"checksum": checksum}
